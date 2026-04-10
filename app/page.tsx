@@ -66,7 +66,6 @@ export default async function HomePage() {
       <div style={{ marginBottom: '32px' }}>
         <h2 style={{
           fontFamily: 'var(--font-display)',
-          fontSize: '1.1rem',
           color: 'var(--text2)',
           marginBottom: '20px',
           letterSpacing: '0.05em',
