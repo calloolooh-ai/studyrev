@@ -15,7 +15,8 @@ async function getTopicData(id: string) {
   if (!topic) return null
 
   const [{ data: notes }, { data: questions }] = await Promise.all([
-    supabase.from('notes').select('*').eq('topic_id', id),
+    supabase.from('notes').select('*').eq('topic_id', id).order('created_at', { ascending: true }),
+
     supabase.from('questions').select('*').eq('topic_id', id).order('marks'),
   ])
 
