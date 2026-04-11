@@ -2,8 +2,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
-import { migrateLocalStorageToSupabase } from '@/lib/storage'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export default function LoginPage() {
   const router = useRouter()
@@ -16,18 +20,19 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError(error.message)
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+      router.push('/')
+      router.refresh()
+    } catch (err) {
+      setError('Something went wrong. Please try again.')
       setLoading(false)
-      return
     }
-    if (data.user) {
-      await migrateLocalStorageToSupabase(data.user.id)
-    }
-    router.push('/')
-    router.refresh()
   }
 
   return (
@@ -61,7 +66,6 @@ export default function LoginPage() {
               required
             />
           </div>
-
           <div>
             <label style={{ display: 'block', fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', fontWeight: 500 }}>
               Password
@@ -85,10 +89,12 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button type="submit" className="btn btn-primary" disabled={loading} style={{
-            width: '100%', justifyContent: 'center', padding: '12px',
-            opacity: loading ? 0.7 : 1,
-          }}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading}
+            style={{ width: '100%', justifyContent: 'center', padding: '12px', opacity: loading ? 0.7 : 1 }}
+          >
             {loading ? 'Logging in...' : 'Log in'}
           </button>
         </form>
@@ -100,8 +106,7 @@ export default function LoginPage() {
       </div>
 
       <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '12px', color: 'var(--text3)' }}>
-        No account needed — you can use StudyRev without logging in.
-        <br />Progress is saved locally in your browser.
+        No account needed — progress saves locally in your browser.
       </p>
     </div>
   )
