@@ -3,7 +3,12 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -13,6 +18,7 @@ export default function Navbar() {
 
   const publicLinks = [
     { href: '/', label: 'Home' },
+    { href: '/pastpapers', label: 'Past Papers' },
     { href: '/saved', label: 'Saved' },
     { href: '/search', label: 'Search' },
   ]
@@ -62,7 +68,7 @@ export default function Navbar() {
               color: isActive('/admin') ? 'var(--amber)' : 'var(--text2)',
               background: isActive('/admin') ? 'var(--amber-dim)' : 'transparent',
               border: '1px solid var(--amber-dim)', transition: 'all 0.15s',
-            }}>⚙ Admin</Link>
+            }}>Admin</Link>
           )}
           <div style={{ width: '1px', height: '20px', background: 'var(--border)', margin: '0 4px' }} />
           {user ? (
@@ -97,7 +103,7 @@ export default function Navbar() {
         <button onClick={() => setMenuOpen(!menuOpen)} className="mobile-menu-btn" style={{
           background: 'none', border: 'none', cursor: 'pointer',
           color: 'var(--text)', fontSize: '20px', padding: '4px', display: 'none',
-        }}>{menuOpen ? '✕' : '☰'}</button>
+        }}>{menuOpen ? 'x' : '='}</button>
       </div>
 
       {menuOpen && (
@@ -115,7 +121,7 @@ export default function Navbar() {
           {isAdmin && (
             <Link href="/admin" onClick={() => setMenuOpen(false)} style={{
               padding: '10px 14px', borderRadius: '6px', fontSize: '14px', color: 'var(--amber)',
-            }}>⚙ Admin</Link>
+            }}>Admin</Link>
           )}
           <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
           {user ? (
