@@ -2,8 +2,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
-import { migrateLocalStorageToSupabase } from '@/lib/storage'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export default function SignupPage() {
   const router = useRouter()
@@ -20,31 +24,31 @@ export default function SignupPage() {
     setLoading(true)
     setError('')
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { display_name: displayName } },
-    })
-
-    if (error) { setError(error.message); setLoading(false); return }
-
-    if (data.user) {
-      // Create profile row
-      await supabase.from('user_profiles').upsert({
-        id: data.user.id,
+    try {
+      const { data, error } = await supabase.auth.signUp({
         email,
-        display_name: displayName || null,
-        is_admin: false,
+        password,
+        options: { data: { display_name: displayName } },
       })
-      await migrateLocalStorageToSupabase(data.user.id)
 
-      // If email confirmation is disabled in Supabase, redirect immediately
-      if (data.session) {
-        router.push('/')
-        router.refresh()
-      } else {
-        setDone(true)
+      if (error) { setError(error.message); setLoading(false); return }
+
+      if (data.user) {
+        await supabase.from('user_profiles').upsert({
+          id: data.user.id,
+          email,
+          display_name: displayName || null,
+          is_admin: false,
+        })
+        if (data.session) {
+          router.push('/')
+          router.refresh()
+        } else {
+          setDone(true)
+        }
       }
+    } catch (err) {
+      setError('Something went wrong. Please try again.')
     }
     setLoading(false)
   }
@@ -57,8 +61,7 @@ export default function SignupPage() {
           Check your email
         </h1>
         <p style={{ color: 'var(--text2)', marginBottom: '24px', lineHeight: 1.6 }}>
-          We sent a confirmation link to <strong style={{ color: 'var(--text)' }}>{email}</strong>.
-          Click it to activate your account.
+          We sent a confirmation link to {email}. Click it to activate your account.
         </p>
         <Link href="/login" className="btn btn-primary" style={{ display: 'inline-flex' }}>
           Back to login
@@ -88,7 +91,7 @@ export default function SignupPage() {
         <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', fontWeight: 500 }}>
-              Display name <span style={{ color: 'var(--text3)' }}>(optional)</span>
+              Display name (optional)
             </label>
             <input
               type="text"
@@ -97,7 +100,6 @@ export default function SignupPage() {
               placeholder="Alex"
             />
           </div>
-
           <div>
             <label style={{ display: 'block', fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', fontWeight: 500 }}>
               Email
@@ -110,10 +112,9 @@ export default function SignupPage() {
               required
             />
           </div>
-
           <div>
             <label style={{ display: 'block', fontSize: '13px', color: 'var(--text2)', marginBottom: '6px', fontWeight: 500 }}>
-              Password <span style={{ color: 'var(--text3)' }}>(min 6 chars)</span>
+              Password (min 6 chars)
             </label>
             <input
               type="password"
@@ -134,10 +135,12 @@ export default function SignupPage() {
             </div>
           )}
 
-          <button type="submit" className="btn btn-primary" disabled={loading} style={{
-            width: '100%', justifyContent: 'center', padding: '12px',
-            opacity: loading ? 0.7 : 1,
-          }}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading}
+            style={{ width: '100%', justifyContent: 'center', padding: '12px', opacity: loading ? 0.7 : 1 }}
+          >
             {loading ? 'Creating account...' : 'Create account'}
           </button>
         </form>
