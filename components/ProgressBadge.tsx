@@ -17,7 +17,7 @@ export default function ProgressBadge({ subjectId, subjectName, color }: {
         .select('id')
         .eq('subject_id', subjectId)
       if (!data) return
-      const completed = getCompletedTopics()
+      const completed = await getCompletedTopics()
       const done = data.filter(t => completed.includes(t.id)).length
       setProgress({ done, total: data.length })
     }
@@ -39,8 +39,8 @@ export default function ProgressBadge({ subjectId, subjectName, color }: {
       </div>
       <div className="progress-bar">
         <div className="progress-bar-fill" style={{
-          width: `${pct}%`,
-          background: `linear-gradient(90deg, ${color}, ${color}88)`,
+          width: pct + '%',
+          background: 'linear-gradient(90deg, ' + color + ', ' + color + '88)',
         }} />
       </div>
     </div>
