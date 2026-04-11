@@ -46,7 +46,7 @@ export default function PastPapersPage() {
     setRevealed({})
   }, [paper, topicId, year, search, questions])
 
-  const years = [...new Set(questions.map((q: any) => q.year).filter(Boolean))].sort().reverse()
+  const years = Array.from(new Set(questions.map((q: any) => q.year).filter(Boolean))).sort().reverse()
 
   const p1count = questions.filter((q: any) => q.paper === 'Paper 1').length
   const p2count = questions.filter((q: any) => q.paper === 'Paper 2').length
